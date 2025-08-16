@@ -1,0 +1,1 @@
+INSERT INTO asset (id, customer_id, asset_id, asset_name, asset_desc) VALUES (1,1, '2', 'TRY','Turkish Lira');
