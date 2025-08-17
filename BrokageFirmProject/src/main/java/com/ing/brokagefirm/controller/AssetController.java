@@ -27,8 +27,8 @@ public class AssetController {
         return ResponseEntity.ok().body(asset);
     }
 
-    @GetMapping("/{customerId}")
-    public ResponseEntity<List<Asset>> getAssetByCustomerId(@PathVariable(value = "customerId") String customerId) throws ResourceNotFoundException {
+    @GetMapping
+    public ResponseEntity<List<Asset>> getAssetByCustomerId(@RequestParam(value = "customerId") String customerId) throws ResourceNotFoundException {
         List<Asset> asset = assetService
                 .findByCustomerId(customerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Asset not found for customer id: " + customerId));

@@ -27,8 +27,8 @@ public class OrderController {
         return ResponseEntity.ok().body(order);
     }
 
-    @GetMapping("/{customerId}")
-    public ResponseEntity<List<Order>> getOrderByCustomerId(@PathVariable(value = "customerId") String customerId) throws ResourceNotFoundException {
+    @GetMapping
+    public ResponseEntity<List<Order>> getOrderByCustomerId(@RequestParam(value = "customerId") String customerId) throws ResourceNotFoundException {
         List<Order> order = orderService
                 .findByCustomerId(customerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found for customer id: " + customerId));
