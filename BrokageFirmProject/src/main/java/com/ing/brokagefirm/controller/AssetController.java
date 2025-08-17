@@ -44,7 +44,7 @@ public class AssetController {
     public ResponseEntity createAsset(@RequestBody Asset asset) throws CustomException {
         Asset assetDB;
         try{
-            assetDB = assetService.saveAsset(asset);
+            assetDB = assetService.createAsset(asset);
         }catch (Exception e){
             throw new CustomException("Create process failed error message : " + e.getMessage());
         }

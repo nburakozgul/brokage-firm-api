@@ -28,7 +28,7 @@ public class Order extends BaseEntity {
     private Double size;
 
     @ManyToOne
-    @JoinColumn(name="asset_id", nullable=false, referencedColumnName = "id")
+    @JoinColumn(name="asset_id", referencedColumnName = "id")
     @JsonBackReference
     private Asset asset;
 

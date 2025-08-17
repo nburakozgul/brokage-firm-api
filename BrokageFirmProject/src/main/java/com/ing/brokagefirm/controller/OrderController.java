@@ -3,6 +3,9 @@ package com.ing.brokagefirm.controller;
 import com.ing.brokagefirm.entity.Order;
 import com.ing.brokagefirm.exception.CustomException;
 import com.ing.brokagefirm.exception.ResourceNotFoundException;
+import com.ing.brokagefirm.mapper.OrderMapper;
+import com.ing.brokagefirm.model.OrderResponse;
+import com.ing.brokagefirm.model.OrderRequest;
 import com.ing.brokagefirm.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -38,11 +41,11 @@ public class OrderController {
         return ResponseEntity.ok().body(orders.get());
     }
 
-    @PostMapping("")
-    public ResponseEntity createOrder(@RequestBody Order order) throws CustomException {
-        Order orderDB;
+    @PostMapping
+    public ResponseEntity createOrder(@RequestBody OrderRequest orderRequest) throws CustomException {
+        OrderResponse orderDB;
         try{
-            orderDB = orderService.createOrder(order);
+            orderDB = orderService.createOrder(OrderMapper.INSTANCE.orderRequestToOrder(orderRequest));
         }catch (Exception e){
             throw new CustomException("Create process failed error message : " + e.getMessage());
         }

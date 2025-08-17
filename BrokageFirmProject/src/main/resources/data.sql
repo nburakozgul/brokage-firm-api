@@ -3,8 +3,9 @@ INSERT INTO asset (id, customer_id, asset_id, asset_name, asset_desc, size, usab
 VALUES
     (1, 'CUST001', 'AST001', 'Apple Inc.', 'Technology stock - AAPL', 100.0, 80.0, NOW(), NOW(), 'system', 'system'),
     (2, 'CUST002', 'AST002', 'Tesla Inc.', 'Automotive & Energy stock - TSLA', 50.0, 45.0, NOW(), NOW(), 'system', 'system'),
-    (3, 'CUST003', 'AST003', 'Bitcoin', 'Cryptocurrency - BTC', 2.5, 2.0, NOW(), NOW(), 'system', 'system'),
-    (4, 'CUST004', 'AST004', 'Amazon.com Inc.', 'E-commerce stock - AMZN', 70.0, 65.0, NOW(), NOW(), 'system', 'system');
+    (3, 'CUST004', 'AST003', 'Bitcoin', 'Cryptocurrency - BTC', 2.5, 2.0, NOW(), NOW(), 'system', 'system'),
+    (4, 'CUST003', 'AST004', 'Amazon.com Inc.', 'E-commerce stock - AMZN', 70.0, 65.0, NOW(), NOW(), 'system', 'system'),
+    (5, 'CUST004', 'AST005', 'TRY', 'Turkish Lira', 700.0, 650.0, NOW(), NOW(), 'system', 'system');
 
 -- Insert mock data into order table
 INSERT INTO "'order'" (id, order_id, customer_id, asset_id, asset_name, order_status, order_side, price, size, created_at, updated_at, created_by, updated_by)

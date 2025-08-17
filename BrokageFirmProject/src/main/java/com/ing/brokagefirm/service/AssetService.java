@@ -27,7 +27,7 @@ public class AssetService {
     }
 
     // TODO
-    public Asset saveAsset(Asset asset){
+    public Asset createAsset(Asset asset){
         return assetRepository.save(asset);
     }
 

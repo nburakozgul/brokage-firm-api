@@ -1,5 +1,6 @@
 package com.ing.brokagefirm.repository;
 
+import com.ing.brokagefirm.entity.Asset;
 import com.ing.brokagefirm.entity.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
