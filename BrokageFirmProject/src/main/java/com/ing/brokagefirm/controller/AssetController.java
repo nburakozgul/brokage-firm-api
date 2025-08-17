@@ -10,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/api/v1/asset")
@@ -29,10 +30,14 @@ public class AssetController {
 
     @GetMapping
     public ResponseEntity<List<Asset>> getAssetByCustomerId(@RequestParam(value = "customerId") String customerId) throws ResourceNotFoundException {
-        List<Asset> asset = assetService
-                .findByCustomerId(customerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Asset not found for customer id: " + customerId));
-        return ResponseEntity.ok().body(asset);
+        Optional<List<Asset>> assets = assetService
+                .findByCustomerId(customerId);
+
+        if (assets.isPresent() && assets.get().isEmpty()) {
+            throw new ResourceNotFoundException("Assets not found for customer id: " + customerId);
+        }
+
+        return ResponseEntity.ok().body(assets.get());
     }
 
     @PostMapping("")

@@ -23,7 +23,7 @@ public class Asset extends BaseEntity {
     @Column(name = "usable_size")
     private Double usableSize;
 
-    @OneToMany(mappedBy="asset")
+    @OneToMany(mappedBy="asset", fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<Order> orders;
 

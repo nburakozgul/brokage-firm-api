@@ -10,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/api/v1/order")
@@ -29,10 +30,12 @@ public class OrderController {
 
     @GetMapping
     public ResponseEntity<List<Order>> getOrderByCustomerId(@RequestParam(value = "customerId") String customerId) throws ResourceNotFoundException {
-        List<Order> order = orderService
-                .findByCustomerId(customerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found for customer id: " + customerId));
-        return ResponseEntity.ok().body(order);
+        Optional<List<Order>> orders = orderService
+                .findByCustomerId(customerId);
+        if (orders.isPresent() && orders.get().isEmpty()) {
+            throw new ResourceNotFoundException("Orders not found for customer id: " + customerId);
+        }
+        return ResponseEntity.ok().body(orders.get());
     }
 
     @PostMapping("")
