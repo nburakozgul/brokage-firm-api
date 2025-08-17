@@ -1,7 +1,9 @@
 package com.ing.brokagefirm.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "asset")
@@ -17,14 +19,23 @@ public class Asset extends BaseEntity {
     private String assetName;
     @Column(name = "asset_desc")
     private String assetDescription;
+    private Double size;
+    @Column(name = "usable_size")
+    private Double usableSize;
 
-    public Asset(LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String updatedBy, Long id, String customerId, String assetId, String assetName, String assetDescription) {
+    @OneToMany(mappedBy="asset")
+    @JsonManagedReference
+    private List<Order> orders;
+
+    public Asset(LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String updatedBy, Long id, String customerId, String assetId, String assetName, String assetDescription, Double size, Double usableSize) {
         super(createdAt, updatedAt, createdBy, updatedBy);
         this.id = id;
         this.customerId = customerId;
         this.assetId = assetId;
         this.assetName = assetName;
         this.assetDescription = assetDescription;
+        this.size = size;
+        this.usableSize = usableSize;
     }
 
     public Asset() {
@@ -68,5 +79,21 @@ public class Asset extends BaseEntity {
 
     public void setAssetDescription(String assetDescription) {
         this.assetDescription = assetDescription;
+    }
+
+    public Double getSize() {
+        return size;
+    }
+
+    public void setSize(Double size) {
+        this.size = size;
+    }
+
+    public Double getUsableSize() {
+        return usableSize;
+    }
+
+    public void setUsableSize(Double usableSize) {
+        this.usableSize = usableSize;
     }
 }

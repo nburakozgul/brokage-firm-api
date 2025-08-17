@@ -1,5 +1,6 @@
 package com.ing.brokagefirm.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.ing.brokagefirm.model.OrderSide;
 import com.ing.brokagefirm.model.OrderStatus;
 import jakarta.persistence.*;
@@ -25,6 +26,11 @@ public class Order extends BaseEntity {
     private OrderSide orderSide;
     private Double price;
     private Double size;
+
+    @ManyToOne
+    @JoinColumn(name="asset_id", nullable=false, referencedColumnName = "id")
+    @JsonBackReference
+    private Asset asset;
 
     public Order(LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String updatedBy, Long id, String orderId, String customerId, String assetName, OrderStatus orderStatus, OrderSide orderSide, Double price, Double size) {
         super(createdAt, updatedAt, createdBy, updatedBy);
