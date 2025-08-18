@@ -3,6 +3,7 @@ package com.ing.brokagefirm.entity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
+
 import java.time.LocalDateTime;
 
 @MappedSuperclass

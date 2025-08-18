@@ -4,26 +4,28 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.ing.brokagefirm.model.OrderSide;
 import com.ing.brokagefirm.model.OrderStatus;
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "'order'")
 public class Order extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY,generator = "order_seq")
+    @SequenceGenerator(name = "order_seq", sequenceName = "order_seq", allocationSize = 1)
     private Long id;
-    @Column(name = "order_id")
+    @Column(name = "order_id", nullable = false, unique = true)
     private String orderId;
-    @Column(name = "customer_id")
+    @Column(name = "customer_id", nullable = false)
     private String customerId;
-    @Column(name = "asset_name")
+    @Column(name = "asset_name", nullable = false)
     private String assetName;
     @Enumerated(EnumType.STRING)
-    @Column(name = "order_status")
+    @Column(name = "order_status", nullable = false)
     private OrderStatus orderStatus;
     @Enumerated(EnumType.STRING)
-    @Column(name = "order_side")
-    private OrderSide orderSide;
+    @Column(name = "order_side", nullable = false)
+    private OrderSide side;
     private Double price;
     private Double size;
 
@@ -32,14 +34,14 @@ public class Order extends BaseEntity {
     @JsonBackReference
     private Asset asset;
 
-    public Order(LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String updatedBy, Long id, String orderId, String customerId, String assetName, OrderStatus orderStatus, OrderSide orderSide, Double price, Double size) {
+    public Order(LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String updatedBy, Long id, String orderId, String customerId, String assetName, OrderStatus orderStatus, OrderSide side, Double price, Double size) {
         super(createdAt, updatedAt, createdBy, updatedBy);
         this.id = id;
         this.orderId = orderId;
         this.customerId = customerId;
         this.assetName = assetName;
         this.orderStatus = orderStatus;
-        this.orderSide = orderSide;
+        this.side = side;
         this.price = price;
         this.size = size;
     }
@@ -87,12 +89,12 @@ public class Order extends BaseEntity {
         this.orderStatus = orderStatus;
     }
 
-    public OrderSide getOrderSide() {
-        return orderSide;
+    public OrderSide getSide() {
+        return side;
     }
 
-    public void setOrderSide(OrderSide orderSide) {
-        this.orderSide = orderSide;
+    public void setSide(OrderSide orderSide) {
+        this.side = orderSide;
     }
 
     public Double getPrice() {
@@ -109,5 +111,13 @@ public class Order extends BaseEntity {
 
     public void setSize(Double size) {
         this.size = size;
+    }
+
+    public Asset getAsset() {
+        return asset;
+    }
+
+    public void setAsset(Asset asset) {
+        this.asset = asset;
     }
 }

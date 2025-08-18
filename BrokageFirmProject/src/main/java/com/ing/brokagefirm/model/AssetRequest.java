@@ -1,54 +1,33 @@
-package com.ing.brokagefirm.entity;
+package com.ing.brokagefirm.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
-@Entity
-@Table(name = "asset")
-public class Asset extends BaseEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO,generator = "asset_seq")
-    @SequenceGenerator(name = "asset_seq", sequenceName = "asset_seq", allocationSize = 1)
-    private Long id;
-    @Column(name = "customer_id")
+public class AssetRequest {
+    @NotNull(message = "Customer ID cannot be null")
     private String customerId;
-    @Column(name = "asset_id")
+    @NotNull(message = "Asset ID cannot be null")
     private String assetId;
-    @Column(name = "asset_name")
+    @NotNull(message = "Asset name cannot be null")
     private String assetName;
-    @Column(name = "asset_desc")
     private String assetDescription;
+    @NotNull(message = "Size cannot be null")
+    @Positive(message = "Price must be greater than 0")
     private Double size;
-    @Column(name = "usable_size")
+    @NotNull(message = "Usable size cannot be null")
+    @Positive(message = "Usable size must be greater than 0")
     private Double usableSize;
 
-    @OneToMany(mappedBy="asset", fetch = FetchType.LAZY)
-    @JsonManagedReference
-    private List<Order> orders;
+    public AssetRequest() {
+    }
 
-    public Asset(LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String updatedBy, Long id, String customerId, String assetId, String assetName, String assetDescription, Double size, Double usableSize) {
-        super(createdAt, updatedAt, createdBy, updatedBy);
-        this.id = id;
+    public AssetRequest(String customerId, String assetId, String assetName, String assetDescription, Double size, Double usableSize) {
         this.customerId = customerId;
         this.assetId = assetId;
         this.assetName = assetName;
         this.assetDescription = assetDescription;
         this.size = size;
         this.usableSize = usableSize;
-    }
-
-    public Asset() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getCustomerId() {

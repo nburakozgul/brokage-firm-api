@@ -1,11 +1,21 @@
 package com.ing.brokagefirm.model;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 public class OrderRequest {
+    @NotNull(message = "Customer ID cannot be null")
     private String customerId;
+    @NotNull(message = "Order side cannot be null")
     private OrderSide side;
+    @NotNull(message = "Price cannot be null")
+    @Positive(message = "Price must be greater than 0")
     private Double price;
+    @NotNull(message = "Size cannot be null")
+    @Positive(message = "Size must be greater than  0")
     private Double size;
     private String assetId;
+    @NotNull(message = "Asset name cannot be null")
     private String assetName;
 
     public OrderRequest() {
