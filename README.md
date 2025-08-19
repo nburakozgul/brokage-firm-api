@@ -5,13 +5,6 @@ Rest api example with Spring Boot and H2
 - Run 'mvn clean install' on project folder /BrokageFirmProject
 - Then run the application api will be ready on localhost:8080
 
-## Authentication
-### Basic Auth
-
-User : user
-
-Password : password
-
 ## Resources
 
 - ```/api/v1``` -Main route
