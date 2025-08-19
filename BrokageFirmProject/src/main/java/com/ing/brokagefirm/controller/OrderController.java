@@ -8,6 +8,8 @@ import com.ing.brokagefirm.service.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,17 +17,20 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/api/v1/order")
+@EnableMethodSecurity
 public class OrderController {
     @Autowired
     private OrderService orderService;
 
     @GetMapping("/{orderId}")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable(value = "orderId") @Valid Long orderId) throws ResourceNotFoundException {
         OrderResponse orderResponse = orderService.findById(orderId);
         return ResponseEntity.ok().body(orderResponse);
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<List<OrderResponse>> getOrderByCustomerId(@RequestParam(value = "customerId") @Valid String customerId) throws ResourceNotFoundException {
         List<OrderResponse> orders = orderService
                 .findByCustomerId(customerId);
@@ -33,6 +38,7 @@ public class OrderController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<OrderResponse> createOrder(@RequestBody @Valid OrderRequest orderRequest) throws CustomException {
         OrderResponse orderResponse;
         try{
@@ -45,6 +51,7 @@ public class OrderController {
     }
 
     @DeleteMapping("/{orderId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity cancelOrder(@PathVariable(value = "orderId") @Valid Long orderId) throws ResourceNotFoundException {
         try {
             orderService.cancelById(orderId);
