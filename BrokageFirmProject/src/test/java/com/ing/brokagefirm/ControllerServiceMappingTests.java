@@ -108,13 +108,13 @@ public class ControllerServiceMappingTests {
 
     @Test
     void testGetOrderByCustomerId_Success() throws ResourceNotFoundException {
-        when(orderService.findByCustomerId("CUST001")).thenReturn(List.of(orderResponse));
+        when(orderService.findByCustomerId("CUST001", null, null)).thenReturn(List.of(orderResponse));
 
-        ResponseEntity<List<OrderResponse>> response = orderController.getOrderByCustomerId("CUST001");
+        ResponseEntity<List<OrderResponse>> response = orderController.getOrderByCustomerId("CUST001", null, null);
 
         assertNotNull(response);
         assertEquals(1, response.getBody().size());
-        verify(orderService, times(1)).findByCustomerId("CUST001");
+        verify(orderService, times(1)).findByCustomerId("CUST001", null, null);
     }
 
     @Test

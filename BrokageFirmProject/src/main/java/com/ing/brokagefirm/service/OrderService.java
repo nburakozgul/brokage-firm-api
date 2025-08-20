@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -37,8 +38,10 @@ public class OrderService {
         return orderRepository.findAll();
     }
 
-    public List<OrderResponse> findByCustomerId(String customerId){
-        List<OrderResponse> orders = orderRepository.findByCustomerId(customerId).stream()
+    public List<OrderResponse> findByCustomerId(String customerId, LocalDate startDate, LocalDate endDate) {
+        List<OrderResponse> orders = orderRepository.findByCustomerId(customerId,
+                        convertStartDate(startDate),
+                        convertEndDate(endDate)).stream()
                 .map(OrderMapper.INSTANCE::orderToOrderResponse)
                 .toList();
 
@@ -72,7 +75,7 @@ public class OrderService {
         if (order.getSide() == OrderSide.SELL) {
             // Fetch the asset to buy/sell
             sellAsset = assetRepository.findByCustomerIdAndAssetName(order.getCustomerId(), order.getAssetName())
-                    .orElseThrow(() -> new CustomException("Asset not found for customer"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Asset not found for customer"));
 
             if (sellAsset.getUsableSize() < order.getSize()) {
                 throw new CustomException("Insufficient asset balance");
@@ -88,10 +91,16 @@ public class OrderService {
         return OrderMapper.INSTANCE.orderToOrderResponse(orderDB);
     }
 
+    @Transactional
     public void cancelById(Long id){
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found for id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found for id: " + id));
         order.setOrderStatus(OrderStatus.CANCELLED);
+        Asset asset = assetRepository.findByCustomerIdAndAssetId(order.getCustomerId(), "AST005")
+                .orElseThrow(() -> new ResourceNotFoundException("TRY asset not found for customer"));
+        double totalCost = order.getSize() * order.getPrice();
+        asset.setUsableSize(asset.getUsableSize() + totalCost);
+        assetRepository.save(asset);
         orderRepository.save(order);
     }
 
@@ -101,5 +110,13 @@ public class OrderService {
         order.setCreatedAt(LocalDateTime.now());
         order.setOrderStatus(OrderStatus.PENDING);
         order.setOrderId(UUID.randomUUID().toString());
+    }
+
+    private LocalDateTime convertStartDate(LocalDate startDate){
+        return (startDate != null) ? startDate.atStartOfDay() : null;
+    }
+
+    private LocalDateTime convertEndDate(LocalDate endDate){
+        return (endDate != null) ? endDate.atTime(23, 59, 59) : null;
     }
 }

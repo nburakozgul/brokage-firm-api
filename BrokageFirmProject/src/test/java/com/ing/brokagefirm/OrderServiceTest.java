@@ -70,11 +70,21 @@ class OrderServiceTest {
         Order order = new Order();
         order.setId(1L);
         order.setOrderStatus(OrderStatus.PENDING);
+        order.setPrice(20.0);
+        order.setSize(1.0);
+
+        Asset tryAsset = new Asset();
+        tryAsset.setUsableSize(50.0);
+        tryAsset.setAssetName("TRY");
+        tryAsset.setAssetId("AST005");
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(assetRepository.findByCustomerIdAndAssetId(order.getCustomerId(), "AST005")).thenReturn(Optional.of(tryAsset));
+        assetRepository.findByCustomerIdAndAssetId(order.getCustomerId(), "AST005");
         orderService.cancelById(1L);
 
         assertEquals(OrderStatus.CANCELLED, order.getOrderStatus());
+        assertEquals(70.0, tryAsset.getUsableSize());
         verify(orderRepository, times(1)).save(order);
     }
 }

@@ -6,13 +6,17 @@ import com.ing.brokagefirm.model.OrderRequest;
 import com.ing.brokagefirm.model.OrderResponse;
 import com.ing.brokagefirm.service.OrderService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Controller
@@ -24,16 +28,18 @@ public class OrderController {
 
     @GetMapping("/{orderId}")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
-    public ResponseEntity<OrderResponse> getOrderById(@PathVariable(value = "orderId") @Valid Long orderId) throws ResourceNotFoundException {
+    public ResponseEntity<OrderResponse> getOrderById(@PathVariable("orderId") Long orderId) throws ResourceNotFoundException {
         OrderResponse orderResponse = orderService.findById(orderId);
         return ResponseEntity.ok().body(orderResponse);
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
-    public ResponseEntity<List<OrderResponse>> getOrderByCustomerId(@RequestParam(value = "customerId") @Valid String customerId) throws ResourceNotFoundException {
-        List<OrderResponse> orders = orderService
-                .findByCustomerId(customerId);
+    public ResponseEntity<List<OrderResponse>> getOrderByCustomerId(@NotEmpty @RequestParam("customerId") String customerId,
+            @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) throws ResourceNotFoundException {
+        List<OrderResponse> orders = orderService.findByCustomerId(customerId, startDate, endDate);
+
         return ResponseEntity.ok().body(orders);
     }
 
@@ -52,7 +58,7 @@ public class OrderController {
 
     @DeleteMapping("/{orderId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity cancelOrder(@PathVariable(value = "orderId") @Valid Long orderId) throws ResourceNotFoundException {
+    public ResponseEntity cancelOrder(@PathVariable("orderId") Long orderId) throws ResourceNotFoundException {
         try {
             orderService.cancelById(orderId);
         } catch (Exception e) {

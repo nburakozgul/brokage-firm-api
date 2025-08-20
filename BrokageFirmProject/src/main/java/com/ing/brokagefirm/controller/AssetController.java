@@ -6,6 +6,7 @@ import com.ing.brokagefirm.model.AssetRequest;
 import com.ing.brokagefirm.model.AssetResponse;
 import com.ing.brokagefirm.service.AssetService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,7 +32,7 @@ public class AssetController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
-    public ResponseEntity<List<AssetResponse>> getAssetByCustomerId(@RequestParam(value = "customerId") String customerId) throws ResourceNotFoundException {
+    public ResponseEntity<List<AssetResponse>> getAssetByCustomerId(@NotEmpty @RequestParam(value = "customerId") String customerId) throws ResourceNotFoundException {
         List<AssetResponse> assets = assetService
                 .findByCustomerId(customerId);
 
