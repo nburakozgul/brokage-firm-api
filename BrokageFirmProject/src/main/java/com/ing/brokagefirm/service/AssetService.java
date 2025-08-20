@@ -8,6 +8,8 @@ import com.ing.brokagefirm.model.AssetRequest;
 import com.ing.brokagefirm.model.AssetResponse;
 import com.ing.brokagefirm.repository.AssetRepository;
 import com.ing.brokagefirm.utility.AssetHelper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,8 +18,11 @@ import java.util.Optional;
 
 @Service
 public class AssetService {
+
     @Autowired
     private AssetRepository assetRepository;
+
+    private static final Logger LOGGER = LogManager.getLogger(AssetService.class);
 
     public AssetResponse findById(Long id) throws ResourceNotFoundException {
         return assetRepository.findById(id).map(AssetMapper.INSTANCE::assetToAssetResponse)
@@ -30,6 +35,7 @@ public class AssetService {
                 .toList();
 
         if (assets.isEmpty()) {
+            LOGGER.debug("Assets not found for customer id: " + customerId);
             throw new ResourceNotFoundException("Assets not found for customer id: " + customerId);
         }
 
@@ -39,6 +45,7 @@ public class AssetService {
     public AssetResponse createAsset(AssetRequest asset) throws ResourceAlreadyExists {
         Optional<Asset> assetDB = assetRepository.findByCustomerIdAndAssetName(asset.getCustomerId(), asset.getAssetName());
         if(assetDB.isPresent()){
+            LOGGER.debug("Asset already exist for customer");
             throw new ResourceAlreadyExists("Asset already exist for customer");
         }
         Asset assetSave = AssetMapper.INSTANCE.assetRequestToAsset(asset);
@@ -51,6 +58,7 @@ public class AssetService {
         try {
             assetRepository.deleteById(id);
         } catch (Exception e) {
+            LOGGER.debug("Asset not found for id: " + id);
             throw new ResourceNotFoundException("Asset not found for id: " + id);
         }
     }

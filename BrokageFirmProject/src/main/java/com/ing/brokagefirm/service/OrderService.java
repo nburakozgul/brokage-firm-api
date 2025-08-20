@@ -14,6 +14,8 @@ import com.ing.brokagefirm.repository.OrderRepository;
 import com.ing.brokagefirm.utility.AssetHelper;
 import com.ing.brokagefirm.utility.LocalDateConverter;
 import com.ing.brokagefirm.utility.OrderHelper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,11 +26,14 @@ import java.util.List;
 
 @Service
 public class OrderService {
+
     @Autowired
     private OrderRepository orderRepository;
 
     @Autowired
     private AssetRepository assetRepository;
+
+    private static final Logger LOGGER = LogManager.getLogger(OrderService.class);
 
     public OrderResponse findById(Long id){
         return orderRepository.findById(id).map(OrderMapper.INSTANCE::orderToOrderResponse)
@@ -43,6 +48,7 @@ public class OrderService {
                 .toList();
 
         if (orders.isEmpty()) {
+            LOGGER.debug("Orders not found for customer id: " + customerId);
             throw new ResourceNotFoundException("Orders not found for customer id: " + customerId);
         }
 
@@ -62,6 +68,7 @@ public class OrderService {
             double totalCost = order.getSize() * order.getPrice();
 
             if (tryAsset.getUsableSize() < totalCost) {
+                LOGGER.debug("Insufficient TRY balance");
                 throw new CustomException("Insufficient TRY balance");
             }
             // Deduct TRY usable size
@@ -77,6 +84,7 @@ public class OrderService {
                     .orElseThrow(() -> new ResourceNotFoundException("Asset not found for customer"));
 
             if (sellAsset.getUsableSize() < order.getSize()) {
+                LOGGER.debug("Insufficient asset balance");
                 throw new CustomException("Insufficient asset balance");
             }
             // Deduct asset usable size
@@ -97,6 +105,7 @@ public class OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found for id: " + id));
 
         if(!OrderStatus.PENDING.equals(order.getOrderStatus())) {
+            LOGGER.debug("Order is not in PENDING state");
             throw new CustomException("Order is not in PENDING state");
         }
 
