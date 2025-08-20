@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -53,14 +52,15 @@ public class OrderService {
     @Transactional
     public OrderResponse createOrder(OrderRequest orderRequest) throws CustomException, ResourceNotFoundException {
         Order order = OrderMapper.INSTANCE.orderRequestToOrder(orderRequest);
-        // Fetch customer's TRY asset
-        Asset tryAsset = assetRepository.findByCustomerIdAndAssetId(order.getCustomerId(), "AST005")
-                .orElseThrow(() -> new ResourceNotFoundException("Customer TRY asset not found"));
-
-        // Calculate total cost for BUY
-        double totalCost = order.getSize() * order.getPrice();
 
         if (order.getSide() == OrderSide.BUY) {
+            // Fetch customer's TRY asset
+            Asset tryAsset = assetRepository.findByCustomerIdAndAssetId(order.getCustomerId(), "AST005")
+                    .orElseThrow(() -> new ResourceNotFoundException("Customer TRY asset not found"));
+
+            // Calculate total cost for BUY
+            double totalCost = order.getSize() * order.getPrice();
+
             if (tryAsset.getUsableSize() < totalCost) {
                 throw new CustomException("Insufficient TRY balance");
             }
@@ -111,7 +111,7 @@ public class OrderService {
 
         if(order.getSide().equals(OrderSide.SELL)) {
             Asset sellAsset = assetRepository.findByCustomerIdAndAssetName(order.getCustomerId(), order.getAssetName())
-                    .orElseThrow(() -> new ResourceNotFoundException(order.getAssetName() + "not found for customer"));
+                    .orElseThrow(() -> new ResourceNotFoundException(order.getAssetName() + " not found for customer"));
             sellAsset.setUsableSize(sellAsset.getUsableSize() + order.getSize());
             AssetHelper.updateAsset(sellAsset);
             assetRepository.save(sellAsset);
@@ -121,11 +121,4 @@ public class OrderService {
         OrderHelper.updateOrder(order);
         orderRepository.save(order);
     }
-
-    // TODO Carry this to utility class?
-
-
-
-
-
 }

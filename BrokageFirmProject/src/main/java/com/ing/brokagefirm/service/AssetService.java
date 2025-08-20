@@ -53,6 +53,5 @@ public class AssetService {
         } catch (Exception e) {
             throw new ResourceNotFoundException("Asset not found for id: " + id);
         }
-
     }
 }

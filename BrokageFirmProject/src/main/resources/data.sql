@@ -1,7 +1,7 @@
 -- Insert mock data into asset table
 INSERT INTO asset (id, customer_id, asset_id, asset_name, asset_desc, size, usable_size, created_at, updated_at, created_by, updated_by)
 VALUES
-    (NEXT VALUE FOR asset_seq, 'CUST001', 'AST001', 'Apple Inc.', 'Technology stock - AAPL', 100.0, 80.0, NOW(), NOW(), 'system', 'system'),
+    (NEXT VALUE FOR asset_seq, 'CUST004', 'AST001', 'Apple Inc.', 'Technology stock - AAPL', 100.0, 80.0, NOW(), NOW(), 'system', 'system'),
     (NEXT VALUE FOR asset_seq, 'CUST002', 'AST002', 'Tesla Inc.', 'Automotive & Energy stock - TSLA', 50.0, 45.0, NOW(), NOW(), 'system', 'system'),
     (NEXT VALUE FOR asset_seq, 'CUST004', 'AST003', 'Bitcoin', 'Cryptocurrency - BTC', 2.5, 2.0, NOW(), NOW(), 'system', 'system'),
     (NEXT VALUE FOR asset_seq, 'CUST003', 'AST004', 'Amazon.com Inc.', 'E-commerce stock - AMZN', 70.0, 65.0, NOW(), NOW(), 'system', 'system'),
