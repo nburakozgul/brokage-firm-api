@@ -1,6 +1,7 @@
 package com.ing.brokagefirm.controller;
 
 import com.ing.brokagefirm.exception.CustomException;
+import com.ing.brokagefirm.exception.ResourceAlreadyExists;
 import com.ing.brokagefirm.exception.ResourceNotFoundException;
 import com.ing.brokagefirm.model.AssetRequest;
 import com.ing.brokagefirm.model.AssetResponse;
@@ -25,30 +26,26 @@ public class AssetController {
 
     @GetMapping("/{assetId}")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
-    public ResponseEntity<AssetResponse> getAssetById(@PathVariable(value = "assetId") Long assetId) throws ResourceNotFoundException {
+    public ResponseEntity<AssetResponse> getAssetById(@PathVariable(value = "assetId") Long assetId) {
         AssetResponse assetResponse = assetService.findById(assetId);
         return ResponseEntity.ok().body(assetResponse);
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
-    public ResponseEntity<List<AssetResponse>> getAssetByCustomerId(@NotEmpty @RequestParam(value = "customerId") String customerId) throws ResourceNotFoundException {
-        List<AssetResponse> assets = assetService
-                .findByCustomerId(customerId);
-
-        if (assets.isEmpty()) {
-            throw new ResourceNotFoundException("Assets not found for customer id: " + customerId);
-        }
-
+    public ResponseEntity<List<AssetResponse>> getAssetByCustomerId(@NotEmpty @RequestParam(value = "customerId") String customerId) {
+        List<AssetResponse> assets = assetService.findByCustomerId(customerId);
         return ResponseEntity.ok().body(assets);
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity createAsset(@RequestBody @Valid AssetRequest assetRequest) throws CustomException {
+    public ResponseEntity createAsset(@RequestBody @Valid AssetRequest assetRequest) throws CustomException, ResourceAlreadyExists {
         AssetResponse assetResponse;
         try {
             assetResponse = assetService.createAsset(assetRequest);
+        } catch (ResourceAlreadyExists e) {
+            throw e;
         } catch (Exception e) {
             throw new CustomException("Create process failed error message : " + e.getMessage());
         }

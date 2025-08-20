@@ -58,11 +58,11 @@ public class OrderController {
 
     @DeleteMapping("/{orderId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity cancelOrder(@PathVariable("orderId") Long orderId) throws ResourceNotFoundException {
+    public ResponseEntity cancelOrder(@PathVariable("orderId") Long orderId) throws CustomException, ResourceNotFoundException {
         try {
             orderService.cancelById(orderId);
         } catch (Exception e) {
-            throw new ResourceNotFoundException("Order not found. Error message: " + e.getMessage());
+            throw new CustomException("Cancel order failed error message : " + e.getMessage());
         }
 
         return ResponseEntity.ok().body("Order cancelled");

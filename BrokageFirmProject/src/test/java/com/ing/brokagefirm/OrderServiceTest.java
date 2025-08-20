@@ -72,6 +72,7 @@ class OrderServiceTest {
         order.setOrderStatus(OrderStatus.PENDING);
         order.setPrice(20.0);
         order.setSize(1.0);
+        order.setSide(OrderSide.BUY);
 
         Asset tryAsset = new Asset();
         tryAsset.setUsableSize(50.0);

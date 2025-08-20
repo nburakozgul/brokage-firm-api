@@ -11,6 +11,9 @@ import com.ing.brokagefirm.model.OrderSide;
 import com.ing.brokagefirm.model.OrderStatus;
 import com.ing.brokagefirm.repository.AssetRepository;
 import com.ing.brokagefirm.repository.OrderRepository;
+import com.ing.brokagefirm.utility.AssetHelper;
+import com.ing.brokagefirm.utility.LocalDateConverter;
+import com.ing.brokagefirm.utility.OrderHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,8 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+
 
 @Service
 public class OrderService {
@@ -34,18 +36,14 @@ public class OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found for id: " + id));
     };
 
-    public List<Order> findAll(){
-        return orderRepository.findAll();
-    }
-
-    public List<OrderResponse> findByCustomerId(String customerId, LocalDate startDate, LocalDate endDate) {
+    public List<OrderResponse> findByCustomerId(String customerId, LocalDate startDate, LocalDate endDate) throws  ResourceNotFoundException {
         List<OrderResponse> orders = orderRepository.findByCustomerId(customerId,
-                        convertStartDate(startDate),
-                        convertEndDate(endDate)).stream()
+                        LocalDateConverter.convertStartDate(startDate),
+                        LocalDateConverter.convertEndDate(endDate)).stream()
                 .map(OrderMapper.INSTANCE::orderToOrderResponse)
                 .toList();
 
-        if (Objects.isNull(orders) || orders.isEmpty()) {
+        if (orders.isEmpty()) {
             throw new ResourceNotFoundException("Orders not found for customer id: " + customerId);
         }
 
@@ -53,11 +51,11 @@ public class OrderService {
     };
 
     @Transactional
-    public OrderResponse createOrder(OrderRequest orderRequest) {
+    public OrderResponse createOrder(OrderRequest orderRequest) throws CustomException, ResourceNotFoundException {
         Order order = OrderMapper.INSTANCE.orderRequestToOrder(orderRequest);
         // Fetch customer's TRY asset
         Asset tryAsset = assetRepository.findByCustomerIdAndAssetId(order.getCustomerId(), "AST005")
-                .orElseThrow(() -> new RuntimeException("Customer TRY asset not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer TRY asset not found"));
 
         // Calculate total cost for BUY
         double totalCost = order.getSize() * order.getPrice();
@@ -68,6 +66,7 @@ public class OrderService {
             }
             // Deduct TRY usable size
             tryAsset.setUsableSize(tryAsset.getUsableSize() - totalCost);
+            AssetHelper.updateAsset(tryAsset);
             assetRepository.save(tryAsset);
         }
 
@@ -82,41 +81,51 @@ public class OrderService {
             }
             // Deduct asset usable size
             sellAsset.setUsableSize(sellAsset.getUsableSize() - order.getSize());
+            AssetHelper.updateAsset(sellAsset);
             assetRepository.save(sellAsset);
             order.setAsset(sellAsset);
         }
 
-        setOrderDefaultValues(order);
+        OrderHelper.setOrderDefaultValues(order);
         Order orderDB = orderRepository.save(order);
         return OrderMapper.INSTANCE.orderToOrderResponse(orderDB);
     }
 
     @Transactional
-    public void cancelById(Long id){
+    public void cancelById(Long id) throws ResourceNotFoundException {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found for id: " + id));
+
+        if(!OrderStatus.PENDING.equals(order.getOrderStatus())) {
+            throw new CustomException("Order is not in PENDING state");
+        }
+
+        if(order.getSide().equals(OrderSide.BUY)) {
+            Asset asset = assetRepository.findByCustomerIdAndAssetId(order.getCustomerId(), "AST005")
+                    .orElseThrow(() -> new ResourceNotFoundException("TRY asset not found for customer. First create try account for refund."));
+            double totalCost = order.getSize() * order.getPrice();
+            asset.setUsableSize(asset.getUsableSize() + totalCost);
+            AssetHelper.updateAsset(asset);
+            assetRepository.save(asset);
+        }
+
+        if(order.getSide().equals(OrderSide.SELL)) {
+            Asset sellAsset = assetRepository.findByCustomerIdAndAssetName(order.getCustomerId(), order.getAssetName())
+                    .orElseThrow(() -> new ResourceNotFoundException(order.getAssetName() + "not found for customer"));
+            sellAsset.setUsableSize(sellAsset.getUsableSize() + order.getSize());
+            AssetHelper.updateAsset(sellAsset);
+            assetRepository.save(sellAsset);
+        }
+
         order.setOrderStatus(OrderStatus.CANCELLED);
-        Asset asset = assetRepository.findByCustomerIdAndAssetId(order.getCustomerId(), "AST005")
-                .orElseThrow(() -> new ResourceNotFoundException("TRY asset not found for customer"));
-        double totalCost = order.getSize() * order.getPrice();
-        asset.setUsableSize(asset.getUsableSize() + totalCost);
-        assetRepository.save(asset);
+        OrderHelper.updateOrder(order);
         orderRepository.save(order);
     }
 
     // TODO Carry this to utility class?
-    private void setOrderDefaultValues(Order order) {
-        order.setCreatedBy(order.getCustomerId());
-        order.setCreatedAt(LocalDateTime.now());
-        order.setOrderStatus(OrderStatus.PENDING);
-        order.setOrderId(UUID.randomUUID().toString());
-    }
 
-    private LocalDateTime convertStartDate(LocalDate startDate){
-        return (startDate != null) ? startDate.atStartOfDay() : null;
-    }
 
-    private LocalDateTime convertEndDate(LocalDate endDate){
-        return (endDate != null) ? endDate.atTime(23, 59, 59) : null;
-    }
+
+
+
 }
