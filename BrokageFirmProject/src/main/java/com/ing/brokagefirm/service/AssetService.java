@@ -11,6 +11,7 @@ import com.ing.brokagefirm.utility.AssetHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -57,6 +58,9 @@ public class AssetService {
     public void deleteById(Long id){
         try {
             assetRepository.deleteById(id);
+        } catch (DataIntegrityViolationException e) {
+            LOGGER.debug("There is an order related with this id: " + id);
+            throw new ResourceNotFoundException("There is an order with this id: " + id);
         } catch (Exception e) {
             LOGGER.debug("Asset not found for id: " + id);
             throw new ResourceNotFoundException("Asset not found for id: " + id);
