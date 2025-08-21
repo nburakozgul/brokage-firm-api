@@ -1,6 +1,7 @@
 package com.ing.brokagefirm.repository;
 
 import com.ing.brokagefirm.entity.Order;
+import com.ing.brokagefirm.model.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,4 +23,6 @@ public interface OrderRepository extends JpaRepository<Order,Long> {
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
+
+    List<Order> findOrdersByOrderStatus(OrderStatus orderStatus);
 }

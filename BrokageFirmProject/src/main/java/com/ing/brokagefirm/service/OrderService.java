@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.*;
 
 
 @Service
@@ -130,4 +130,105 @@ public class OrderService {
         OrderHelper.updateOrder(order);
         orderRepository.save(order);
     }
+
+    /*
+    * if one buy or sell fails(db updates), all transactions rollback. it should be transaction per buy, not whole code
+    * Optional was good for other method, but it causes a mess here
+    * Good thing, it works and covers all cases
+    * Needs proper unit testing
+    * Divide method to parts, it will be more readable and easy to debug
+    * (Implementation was last minute call)
+    * */
+
+    @Transactional
+    public void matchPendingOrders() {
+        List<Order> pendingOrder = orderRepository.findOrdersByOrderStatus(OrderStatus.PENDING);
+        // 1. Fetch all pending BUY orders
+        List<Order> buyOrders = pendingOrder.stream().filter(o -> OrderSide.BUY.equals(o.getSide())).sorted(Comparator.comparing(Order::getCreatedAt)).toList();
+
+        // 2. Fetch all pending SELL orders
+        List<Order> sellOrders = pendingOrder.stream().filter(o -> OrderSide.SELL.equals(o.getSide())).toList();
+
+        buyOrders.forEach(buyOrder -> {
+            double buyRemaining = buyOrder.getSize();
+            List<Order> sellOrdersWithCustomer = sellOrders.stream()
+                    .filter(sellOrder ->
+                        sellOrder.getAssetName().equals(buyOrder.getAssetName()) && sellOrder.getPrice() <= buyOrder.getPrice()
+                    )
+                    .sorted(Comparator.comparing(Order::getPrice))
+                    .toList();
+
+            Iterator<Order> sellIterator = sellOrdersWithCustomer.iterator();
+            while (buyRemaining > 0 && sellIterator.hasNext()) {
+                Order sellOrder = sellIterator.next();
+                double sellRemaining = sellOrder.getSize();
+
+                // Matched quantity
+                double matchedSize = Math.min(buyRemaining, sellRemaining);
+
+                // Get Asset from DB
+                Optional<Asset> tryAssetBuyOpt = assetRepository.findByCustomerIdAndAssetId(buyOrder.getCustomerId(), "AST005");
+                Optional<Asset> tryAssetSellOpt = assetRepository.findByCustomerIdAndAssetId(sellOrder.getCustomerId(), "AST005");
+                Optional<Asset> targetAssetBuyOpt = assetRepository.findByCustomerIdAndAssetName(buyOrder.getCustomerId(), buyOrder.getAssetName());
+                Optional<Asset> targetAssetSellOpt = assetRepository.findByCustomerIdAndAssetName(sellOrder.getCustomerId(), sellOrder.getAssetName());
+
+                if (tryAssetSellOpt.isEmpty() || targetAssetSellOpt.isEmpty())
+                    continue;
+
+                if (tryAssetBuyOpt.isEmpty())
+                    break;
+
+                Asset targetAssetBuy = null;
+
+                // Create asset we want to buy if we don't have yet
+                if (targetAssetBuyOpt.isEmpty()) {
+                    targetAssetBuy = AssetHelper.createAssetWithCustomerId(tryAssetBuyOpt.get().getCustomerId(), targetAssetSellOpt.get());
+                } else {
+                    targetAssetBuy = targetAssetBuyOpt.get();
+                }
+
+                Asset tryAssetSell = tryAssetSellOpt.get();
+                Asset tryAssetBuy = tryAssetBuyOpt.get();
+                Asset targetAssetSell = targetAssetSellOpt.get();
+
+                double totalCost = matchedSize * sellOrder.getPrice();
+
+                // Buyer: deduct TRY (already locked in usableSize), add asset
+                tryAssetBuy.setSize(tryAssetBuy.getSize() - totalCost);
+                targetAssetBuy.setSize(targetAssetBuy.getSize() + matchedSize);
+                targetAssetBuy.setUsableSize(targetAssetBuy.getUsableSize() + matchedSize);
+
+                // Seller: add TRY, deduct asset (already locked in usableSize)
+                tryAssetSell.setSize(tryAssetSell.getSize() + totalCost);
+                targetAssetSell.setSize(targetAssetSell.getSize() - matchedSize);
+                targetAssetSell.setUsableSize(targetAssetSell.getUsableSize() - matchedSize);
+
+                assetRepository.saveAll(Arrays.asList(tryAssetBuy, tryAssetSell, targetAssetBuy, targetAssetSell));
+
+                // Update orders
+                buyRemaining -= matchedSize;
+                sellRemaining -= matchedSize;
+
+                sellOrder.setSize(sellRemaining);
+                if (sellRemaining == 0) {
+                    sellOrder.setOrderStatus(OrderStatus.MATCHED);
+                }
+                orderRepository.save(sellOrder);
+
+                if (buyRemaining == 0) {
+                    buyOrder.setSize(0.0);
+                    buyOrder.setOrderStatus(OrderStatus.MATCHED);
+                    orderRepository.save(buyOrder);
+                    break; // next BUY order
+                }
+            }
+
+            // Update remaining size if partially filled
+            if (buyRemaining > 0) {
+                buyOrder.setSize(buyRemaining);
+                orderRepository.save(buyOrder);
+            }
+        });
+    }
+
 }

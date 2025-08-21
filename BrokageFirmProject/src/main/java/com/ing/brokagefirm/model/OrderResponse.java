@@ -7,16 +7,16 @@ public class OrderResponse {
     private String customerId;
     private String assetName;
     @Enumerated(EnumType.STRING)
-    private OrderSide orderSide;
+    private OrderSide side;
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
     private double size;
     private double price;
 
-    public OrderResponse(String customerId, String assetName, OrderSide orderSide, OrderStatus orderStatus, double size, double price) {
+    public OrderResponse(String customerId, String assetName, OrderSide side, OrderStatus orderStatus, double size, double price) {
         this.customerId = customerId;
         this.assetName = assetName;
-        this.orderSide = orderSide;
+        this.side = side;
         this.orderStatus = orderStatus;
         this.size = size;
         this.price = price;
@@ -41,12 +41,12 @@ public class OrderResponse {
         this.assetName = assetName;
     }
 
-    public OrderSide getOrderSide() {
-        return orderSide;
+    public OrderSide getSide() {
+        return side;
     }
 
-    public void setOrderSide(OrderSide orderSide) {
-        this.orderSide = orderSide;
+    public void setSide(OrderSide side) {
+        this.side = side;
     }
 
     public OrderStatus getOrderStatus() {

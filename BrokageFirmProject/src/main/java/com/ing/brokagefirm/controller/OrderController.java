@@ -16,7 +16,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Controller
@@ -54,6 +53,18 @@ public class OrderController {
         }
 
         return ResponseEntity.ok().body(orderResponse);
+    }
+
+    @PostMapping("/match")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity matchOrder() throws CustomException {
+        try{
+            orderService.matchPendingOrders();
+        }catch (Exception e) {
+            throw new CustomException("Match failed error message : " + e.getMessage());
+        }
+
+        return ResponseEntity.ok().body("Orders are matched");
     }
 
     @DeleteMapping("/{orderId}")
